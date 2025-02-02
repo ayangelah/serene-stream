@@ -168,6 +168,8 @@ struct ClipsView: View {
                                 selectedTab: $selectedTab, startGenerateTask: { title, prompt in
                                     generateTaskViewModel.generateSong(with: authViewModel.token!, documentsDirectory: documentsDirectory, title: title, prompt: prompt, filenames: selectedFiles)
                                 })
+                            .presentationDetents([.medium])
+                            .presentationDragIndicator(.visible)
                         }
                     }
                 }
