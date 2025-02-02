@@ -2,38 +2,60 @@ import SwiftUI
 import UniformTypeIdentifiers
 import AVFoundation
 
+struct Track: Identifiable {
+    let id: UUID
+    let name: String
+    let fileURL: URL
+    let createdDate: Date
+}
+
 struct TracksView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     
     @State private var tracks: [Track] = []
     @State private var showOthersLikeYou = false
-    
     @State private var audioPlayer: AVAudioPlayer?
     @State private var audioPlayerManager: AudioPlayerManager?
     @State private var isPlaying = false
     @State private var currentlyPlayingFileURL: URL?
-    
     
     private let fileManager = FileManager.default
     private let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     
     var body: some View {
         VStack {
+            // Heading "My Tracks"
+            Text("My Tracks")
+                .font(.title)
+                .bold()
+                .foregroundColor(Color(hex: "#0c3b2e"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.top, -10)
+            
             List {
                 ForEach(tracks) { track in
                     HStack {
-                        Text(track.name)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
+                        Image(systemName: "music.note")
+                            .foregroundColor(Color(hex: "bb8a52"))
+                            .font(.system(size: 24))
+                        
+                        VStack(alignment: .leading) {
+                            Text(track.name)
+                                .font(.system(size: 16, weight: .medium))
+                            Text("Created: \(formattedDate(track.createdDate))")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                        }
+                        
                         Spacer()
+                        
                         Button(action: {
                             if isPlaying && currentlyPlayingFileURL == track.fileURL {
-                                // If this file is currently playing, stop it
                                 audioPlayer?.stop()
                                 isPlaying = false
-                                currentlyPlayingFileURL = URL(filePath: "")
+                                currentlyPlayingFileURL = nil
                             } else {
-                                // If this file is not playing, play it
                                 playAudio(audioFileURL: track.fileURL)
                             }
                         }) {
@@ -42,53 +64,70 @@ struct TracksView: View {
                                     .frame(width: 24, height: 24)
                             } else {
                                 Image(systemName: "play.fill")
-                                    .foregroundColor(Color(hex: "#ffffff"))
+                                    .foregroundColor(Color(hex: "bb8a52"))
                             }
                         }
                         .padding(.leading, 8)
                     }
+                    .padding()
                     .swipeActions(edge: .trailing) {
-                        // Delete Action
+                        Button {
+                            // Magic wand functionality will be added later
+                        } label: {
+                            Label("Magic", systemImage: "wand.and.stars")
+                        }
+                        .tint(.yellow)
+                        
                         Button(role: .destructive) {
                             deleteTrack(track)
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
-
-                        // Connect Action
-                        Button {
-                            showOthersLikeYou = true
-                        } label: {
-                            Label("Connect", systemImage: "person.2.circle")
-                        }
-                        .tint(.blue)
                     }
+                    .listRowBackground(Color.white)
                 }
             }
-
-            Spacer()
+            .listStyle(PlainListStyle())
+            .background(Color.white)
         }
-        .sheet(isPresented: $showOthersLikeYou) {
-            OthersLikeYouView()
-        }
-        .navigationTitle("Tracks")
+        .padding()
+        .navigationBarHidden(true)
+        .frame(maxHeight: .infinity, alignment: .top)
         .onAppear {
-            do {
-                try AVAudioSession.sharedInstance().setCategory(.playAndRecord, options: .defaultToSpeaker)
-                try AVAudioSession.sharedInstance().setActive(true)
-            } catch {
-                print("Failed to set audio session category: \(error)")
-            }
+            setupAudioSession()
             loadSavedTracks()
         }
     }
-
-    // MARK: - Track Management
+    
+    private func setupAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, options: .defaultToSpeaker)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Failed to set audio session category: \(error)")
+        }
+    }
+    
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd/yyyy"
+        return formatter.string(from: date)
+    }
+    
     private func loadSavedTracks() {
         do {
-            let files = try fileManager.contentsOfDirectory(at: documentsDirectory, includingPropertiesForKeys: nil)
-            tracks = files.filter { $0.pathExtension == "mp3" }
-                .map { Track(id: UUID(), name: $0.lastPathComponent, fileURL: $0) }
+            let files = try fileManager.contentsOfDirectory(at: documentsDirectory, includingPropertiesForKeys: [.creationDateKey])
+            tracks = try files.filter { $0.pathExtension == "mp3" }
+                .map { url in
+                    let resourceValues = try url.resourceValues(forKeys: [.creationDateKey])
+                    let creationDate = resourceValues.creationDate ?? Date()
+                    return Track(
+                        id: UUID(),
+                        name: url.deletingPathExtension().lastPathComponent,
+                        fileURL: url,
+                        createdDate: creationDate
+                    )
+                }
         } catch {
             print("Error loading files: \(error.localizedDescription)")
         }
@@ -101,23 +140,20 @@ struct TracksView: View {
         } catch {
             print("Error deleting file \(track.name): \(error.localizedDescription)")
         }
-        
         loadSavedTracks()
     }
     
     private func playAudio(audioFileURL: URL) {
         do {
-            // Stop any currently playing audio
             if isPlaying {
                 audioPlayer?.stop()
                 isPlaying = false
-                currentlyPlayingFileURL = URL(filePath: "")
+                currentlyPlayingFileURL = nil
             }
             
-            // Create a new audio player manager
             audioPlayerManager = AudioPlayerManager {
                 isPlaying = false
-                currentlyPlayingFileURL = URL(filePath: "")
+                currentlyPlayingFileURL = nil
             }
             
             audioPlayer = try AVAudioPlayer(contentsOf: audioFileURL)
@@ -129,10 +165,4 @@ struct TracksView: View {
             print("Error playing audio: \(error.localizedDescription)")
         }
     }
-}
-
-struct Track: Identifiable {
-    let id: UUID
-    let name: String
-    let fileURL: URL
 }
