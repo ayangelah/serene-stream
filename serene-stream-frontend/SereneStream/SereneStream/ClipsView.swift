@@ -13,6 +13,9 @@ struct ClipsView: View {
     @State private var showGeneratePage = false
     @Binding var selectedTab: Int // Track the current tab
 
+    @State private var recordingTime: TimeInterval = 0
+    @State private var timer: Timer?
+
     private let fileManager = FileManager.default
     private let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 
@@ -30,80 +33,113 @@ struct ClipsView: View {
                     .zIndex(1) // Ensure it appears on top of other UI
             }
             
-            
             VStack {
+                // Heading "My Clips"
+                Text("My Clips")
+                    .font(.title)
+                    .bold()
+                    .foregroundColor(Color(hex: "#0c3b2e"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .padding(.top, -10)
+
                 // List of recorded audio files with checkboxes
                 List(recordedFiles, id: \.self, selection: $selectedFiles) { fileName in
                     HStack {
                         // Checkbox for selecting the file
-                        Image(systemName: selectedFiles.contains(fileName) ? "checkmark.square" : "square")
+                        Image(systemName: selectedFiles.contains(fileName) ? "checkmark.square.fill" : "square")
+                            .foregroundColor(.white)
                             .onTapGesture {
                                 toggleSelection(fileName: fileName)
                             }
                         
                         Text(fileName)
+                            .foregroundColor(.white)
+                        
                         Spacer()
                         
                         // Play button for each audio file
-                        Button("Play") {
+                        Button(action: {
                             playAudio(fileName: fileName)
+                        }) {
+                            Image(systemName: "play.fill")
+                                .foregroundColor(selectedFiles.contains(fileName) ? Color(hex: "#0c3b2e") : Color(hex: "#ffffff"))
                         }
                         .padding(.leading, 8)
                     }
+                    .padding()
+                    .background(selectedFiles.contains(fileName) ? Color(hex: "6d9773") : Color(hex: "#0c3b2e")) // Change background when selected
+                    .foregroundColor(selectedFiles.contains(fileName) ? Color(hex: "#0c3b2e") : Color(hex: "#ffffff")) // Change foreground when selected
+                    .cornerRadius(8)
+                    .listRowBackground(Color.white) // Set list row background to white
                 }
+                .listStyle(PlainListStyle()) // Remove default list styling
 
                 Spacer()
 
-                // Record Button
-                Button(action: {
-                    if isRecording {
-                        stopRecording()
-                    } else {
-                        startRecording()
-                    }
-                }) {
-                    Text(isRecording ? "Stop Recording" : "Start Recording")
-                        .frame(maxWidth: .infinity)
+                // Record Button (Microphone Icon) and Timer
+                if selectedFiles.isEmpty {
+                    VStack {
+                        if isRecording {
+                            Text(timeFormatted(recordingTime))
+                                .font(.system(size: 24, design: .monospaced))
+                                .foregroundColor(Color(hex: "#0c3b2e"))
+                                .padding(.bottom, 8)
+                        }
+
+                        Button(action: {
+                            if isRecording {
+                                stopRecording()
+                            } else {
+                                startRecording()
+                            }
+                        }) {
+                            Image(systemName: isRecording ? "mic.fill" : "mic")
+                                .font(.system(size: 24))
+                                .foregroundColor(Color(hex: "#ffffff"))
+                                .padding()
+                                .background(isRecording ? Color(hex: "#E63946") : Color(hex: "#0c3b2e"))
+                                .clipShape(Circle())
+                                .overlay(
+                                    isRecording ? SoundWaveView().offset(y: 30) : nil
+                                )
+                        }
                         .padding()
-                        .background(isRecording ? Color.red : Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
+                    }
                 }
-                .padding()
-                
-                // Delete Button
+
+                // Delete and Generate Buttons
                 if !selectedFiles.isEmpty {
-                    Button(action: {
-                        deleteSelectedFiles()
-                    }) {
-                        Text("Delete Selected")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                    .padding()
-                }
-                
-                // Generate Button
-                Button(action: {
-                    showGeneratePage.toggle()
-                }) {
-                    Text("Generate")
-                        .frame(maxWidth: .infinity)
+                    HStack {
+                        Button(action: {
+                            deleteSelectedFiles()
+                        }) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color(hex: "#D62828"))
+                                .clipShape(Circle())
+                        }
                         .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-                .padding()
-                .sheet(isPresented: $showGeneratePage) {
-                    GeneratePageView(
-                        selectedTab: $selectedTab, startGenerateTask: { title, prompt in
-                            generateTaskViewModel.generateSong(with: authViewModel.token!, title: title, prompt: prompt, filenames: selectedFiles
-                            )
-                        })
+
+                        Button(action: {
+                            showGeneratePage.toggle()
+                        }) {
+                            Image("Add")
+                                .resizable()
+                                .frame(width: 98, height: 98) // Adjust size as needed
+                                .foregroundColor(.white)
+//                                .padding()
+                        }
+                        .padding()
+                        .sheet(isPresented: $showGeneratePage) {
+                            GeneratePageView(
+                                selectedTab: $selectedTab, startGenerateTask: { title, prompt in
+                                    generateTaskViewModel.generateSong(with: authViewModel.token!, title: title, prompt: prompt, filenames: selectedFiles)
+                                })
+                        }
+                    }
                 }
 
                 if let message = generateTaskViewModel.resultMessage {
@@ -122,7 +158,8 @@ struct ClipsView: View {
                 loadSavedAudioFiles()
             }
             .padding()
-            .navigationTitle("ClipsView")
+            .navigationBarHidden(true)
+            .frame(maxHeight: .infinity, alignment: .top)
         }
     }
 
@@ -142,6 +179,7 @@ struct ClipsView: View {
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
             audioRecorder?.record()
             isRecording = true
+            startTimer()
         } catch {
             print("Error starting recording: \(error.localizedDescription)")
         }
@@ -151,7 +189,29 @@ struct ClipsView: View {
     private func stopRecording() {
         audioRecorder?.stop()
         isRecording = false
+        stopTimer()
         loadSavedAudioFiles() // Reload the list after stopping recording
+    }
+
+    // Start the recording timer
+    private func startTimer() {
+        recordingTime = 0
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            recordingTime += 1
+        }
+    }
+
+    // Stop the recording timer
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    // Format the recording time as "00:00"
+    private func timeFormatted(_ totalSeconds: TimeInterval) -> String {
+        let minutes = Int(totalSeconds) / 60
+        let seconds = Int(totalSeconds) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
     }
 
     // Play the selected audio file
@@ -210,5 +270,23 @@ struct ClipsView: View {
         // Reload files after deletion
         loadSavedAudioFiles()
         selectedFiles.removeAll() // Reset the selected files
+    }
+}
+
+struct SoundWaveView: View {
+    @State private var animate = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<5) { index in
+                RoundedRectangle(cornerRadius: 3)
+                    .frame(width: 4, height: animate ? CGFloat.random(in: 10...30) : 10)
+                    .animation(Animation.easeInOut(duration: 0.5).repeatForever().delay(Double(index) * 0.1), value: animate)
+                    .onAppear {
+                        animate = true
+                    }
+            }
+        }
+        .frame(height: 30)
     }
 }
