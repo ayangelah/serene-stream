@@ -8,14 +8,46 @@ struct LoginView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 16) {
+            VStack(spacing: 24) {
+                Spacer().frame(height:20)
+                
+                // Logo
+                Image("Logo") // Make sure the image is in your assets
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 60, height: 60)
+                
+                Text("**SereneStream**")
+                    .foregroundColor(Color(hex: "#0c3b2e"))
+                    .padding(.top, -30)// Dark green color
+                
+                Spacer().frame(height:10)
+                
+                // Username Field
+                HStack {
+                   Image(systemName: "person.fill")
+                        .foregroundColor(Color(hex: "#9ba19f"))
                 TextField("Username", text: $username)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .autocapitalization(.none)
-                    .disableAutocorrection(true)
+                  .autocapitalization(.none)
+                  .disableAutocorrection(true)
+                  .padding(.leading,8)
+                                }
+                                .padding()
+                                .frame(height:50)
+                                .background(Color(hex: "#f8faf9")) // Light white background
+                                .cornerRadius(12)
 
-                SecureField("Password", text: $password)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                // Password Field
+                                HStack {
+                                    Image(systemName: "lock.fill")
+                                        .foregroundColor(Color(hex: "#9ba19f"))
+                                    SecureField("Password", text: $password)
+                                        .padding(.leading,8)
+                                }
+                                .padding()
+                                .background(Color(hex: "#f8faf9")) // Light white background
+                                .cornerRadius(12)
+
 
                 if let error = errorMessage {
                     Text(error)
@@ -23,12 +55,12 @@ struct LoginView: View {
                 }
 
                 Button(action: login) {
-                    Text("Login")
+                    Text("Continue")
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color(hex: "#6d9773")) // Green color
                         .foregroundColor(.white)
-                        .cornerRadius(8)
+                        .cornerRadius(20)
                 }
 
                 NavigationLink(
@@ -36,9 +68,14 @@ struct LoginView: View {
                     isActive: $navigateToHome,
                     label: { EmptyView() }
                 )
+                
+                Spacer()
             }
-            .padding()
+            .padding(.horizontal,32)
+            .frame(maxHeight: .infinity, alignment: .top)
             .navigationTitle("Login")
+            .navigationBarHidden(true)
+            .background(Color(hex: "#ffffff"))
         }
     }
 
@@ -103,4 +140,17 @@ struct LoginView: View {
         }.resume() // Start the task
     }
 
+}
+
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let r, g, b: Double
+        r = Double((int >> 16) & 0xFF) / 255.0
+        g = Double((int >> 8) & 0xFF) / 255.0
+        b = Double(int & 0xFF) / 255.0
+        self.init(red: r, green: g, blue: b)
+    }
 }
