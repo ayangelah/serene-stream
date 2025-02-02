@@ -106,7 +106,8 @@ class GenerateTaskViewModel: ObservableObject {
                     var fileURL: URL = documentsDirectory
                     if let httpResponse = generationResultResponse as? HTTPURLResponse,
                        let contentDisposition = httpResponse.allHeaderFields["Content-Disposition"] as? String,
-                       let filename = contentDisposition.components(separatedBy: "filename=").last?.trimmingCharacters(in: .whitespacesAndNewlines) {
+                       let filename = contentDisposition.components(separatedBy: "filename=").last?.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+                        {
 
                         // Create the destination URL
                         fileURL = documentsDirectory.appendingPathComponent(filename)

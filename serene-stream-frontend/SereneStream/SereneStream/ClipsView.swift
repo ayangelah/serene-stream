@@ -43,7 +43,7 @@ struct ClipsView: View {
         ZStack {
             // Show ProgressView when the task is running
             if generateTaskViewModel.isLoading {
-                ProgressView("Running Task...")
+                ProgressView("Generating Your Creation...")
                     .progressViewStyle(CircularProgressViewStyle())
                     .padding()
                     .background(Color.black.opacity(0.5)) // Semi-transparent background
@@ -189,6 +189,11 @@ struct ClipsView: View {
                 }
                 loadSavedAudioFiles()
             }
+            .onChange(of: generateTaskViewModel.resultMessage ?? "") { newValue in
+                if !newValue.isEmpty {
+                            selectedTab = 1
+                        }
+                    }
             .padding()
             .navigationBarHidden(true)
             .frame(maxHeight: .infinity, alignment: .top)

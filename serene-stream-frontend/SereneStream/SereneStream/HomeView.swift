@@ -30,6 +30,7 @@ struct HomeView: View {
                                 Label("Tracks", systemImage: "music.note.list")
                             }
                             .tag(1)
+                            .environmentObject(authViewModel)
                     }
                     .onAppear {
                         // Set the background color of the tab bar

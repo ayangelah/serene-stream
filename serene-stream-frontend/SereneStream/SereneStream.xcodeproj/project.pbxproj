@@ -22,6 +22,7 @@
 		0BE9ECF92D4F24A300A051D1 /* ClipsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE9ECF82D4F24A300A051D1 /* ClipsView.swift */; };
 		0BE9ECFB2D4F24D900A051D1 /* TracksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE9ECFA2D4F24D900A051D1 /* TracksView.swift */; };
 		0BE9ECFE2D4F3A4200A051D1 /* GeneratePageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE9ECFD2D4F3A4200A051D1 /* GeneratePageView.swift */; };
+		16896CDF2D500CF100EC4612 /* ConnectTaskViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16896CDE2D500CED00EC4612 /* ConnectTaskViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +62,7 @@
 		0BE9ECFA2D4F24D900A051D1 /* TracksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TracksView.swift; sourceTree = "<group>"; };
 		0BE9ECFC2D4F384000A051D1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0BE9ECFD2D4F3A4200A051D1 /* GeneratePageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratePageView.swift; sourceTree = "<group>"; };
+		16896CDE2D500CED00EC4612 /* ConnectTaskViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectTaskViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,6 +113,7 @@
 		0BE9ECC92D4F1C0200A051D1 /* SereneStream */ = {
 			isa = PBXGroup;
 			children = (
+				16896CDE2D500CED00EC4612 /* ConnectTaskViewModel.swift */,
 				0B4DD71F2D4F78260058C230 /* GenerateTaskViewModel.swift */,
 				0B4DD71D2D4F76890058C230 /* AuthViewModel.swift */,
 				0B4DD71B2D4F75470058C230 /* OthersLikeYouView.swift */,
@@ -287,6 +290,7 @@
 				0BE9ECCD2D4F1C0200A051D1 /* ContentView.swift in Sources */,
 				0BE9ECFB2D4F24D900A051D1 /* TracksView.swift in Sources */,
 				0B4DD7202D4F78260058C230 /* GenerateTaskViewModel.swift in Sources */,
+				16896CDF2D500CF100EC4612 /* ConnectTaskViewModel.swift in Sources */,
 				0BE9ECF92D4F24A300A051D1 /* ClipsView.swift in Sources */,
 				0B4DD71C2D4F75470058C230 /* OthersLikeYouView.swift in Sources */,
 				0BE9ECF72D4F1E4D00A051D1 /* LoginView.swift in Sources */,
