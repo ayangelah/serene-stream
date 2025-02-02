@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LoginView: View {
+    @StateObject private var authViewModel = AuthViewModel()
     @State private var username = ""
     @State private var password = ""
     @State private var errorMessage: String? = nil
@@ -32,7 +33,8 @@ struct LoginView: View {
                 }
 
                 NavigationLink(
-                    destination: HomeView(),
+                    destination: HomeView()
+                        .environmentObject(authViewModel),
                     isActive: $navigateToHome,
                     label: { EmptyView() }
                 )
@@ -93,6 +95,7 @@ struct LoginView: View {
                 // Decode the response JSON (assuming a success message or token)
                 if let responseJSON = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                    let token = responseJSON["token"] as? String, !token.isEmpty {
+                    authViewModel.token = token
                     // Navigate to the home page if login succeeds
                     navigateToHome = true
                 } else {

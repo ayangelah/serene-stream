@@ -5,6 +5,8 @@ struct GeneratePageView: View {
     @State private var prompt: String = ""
     @Environment(\.presentationMode) var presentationMode
     @Binding var selectedTab: Int // Track the current tab
+    
+    var startGenerateTask: (String, String) -> Void
 
     var body: some View {
         VStack {
@@ -24,7 +26,8 @@ struct GeneratePageView: View {
             Button(action: {
                 // Navigate to Page B in TabView
                 presentationMode.wrappedValue.dismiss()
-                selectedTab = 1
+                //selectedTab = 1
+                startGenerateTask(title, prompt)
             }) {
                 Text("Enter")
                     .frame(maxWidth: .infinity)

@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B4DD71C2D4F75470058C230 /* OthersLikeYouView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4DD71B2D4F75470058C230 /* OthersLikeYouView.swift */; };
+		0B4DD71E2D4F76970058C230 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4DD71D2D4F76890058C230 /* AuthViewModel.swift */; };
+		0B4DD7202D4F78260058C230 /* GenerateTaskViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4DD71F2D4F78260058C230 /* GenerateTaskViewModel.swift */; };
 		0BE9ECCB2D4F1C0200A051D1 /* SereneStreamApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE9ECCA2D4F1C0200A051D1 /* SereneStreamApp.swift */; };
 		0BE9ECCD2D4F1C0200A051D1 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE9ECCC2D4F1C0200A051D1 /* ContentView.swift */; };
 		0BE9ECCF2D4F1C0300A051D1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0BE9ECCE2D4F1C0300A051D1 /* Assets.xcassets */; };
@@ -39,6 +42,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0B4DD71B2D4F75470058C230 /* OthersLikeYouView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OthersLikeYouView.swift; sourceTree = "<group>"; };
+		0B4DD71D2D4F76890058C230 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		0B4DD71F2D4F78260058C230 /* GenerateTaskViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerateTaskViewModel.swift; sourceTree = "<group>"; };
 		0BE9ECC72D4F1C0200A051D1 /* SereneStream.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SereneStream.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0BE9ECCA2D4F1C0200A051D1 /* SereneStreamApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SereneStreamApp.swift; sourceTree = "<group>"; };
 		0BE9ECCC2D4F1C0200A051D1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -105,6 +111,9 @@
 		0BE9ECC92D4F1C0200A051D1 /* SereneStream */ = {
 			isa = PBXGroup;
 			children = (
+				0B4DD71F2D4F78260058C230 /* GenerateTaskViewModel.swift */,
+				0B4DD71D2D4F76890058C230 /* AuthViewModel.swift */,
+				0B4DD71B2D4F75470058C230 /* OthersLikeYouView.swift */,
 				0BE9ECFC2D4F384000A051D1 /* Info.plist */,
 				0BE9ECCA2D4F1C0200A051D1 /* SereneStreamApp.swift */,
 				0BE9ECCC2D4F1C0200A051D1 /* ContentView.swift */,
@@ -277,10 +286,13 @@
 				0BE9ECF52D4F1D7D00A051D1 /* HomeView.swift in Sources */,
 				0BE9ECCD2D4F1C0200A051D1 /* ContentView.swift in Sources */,
 				0BE9ECFB2D4F24D900A051D1 /* TracksView.swift in Sources */,
+				0B4DD7202D4F78260058C230 /* GenerateTaskViewModel.swift in Sources */,
 				0BE9ECF92D4F24A300A051D1 /* ClipsView.swift in Sources */,
+				0B4DD71C2D4F75470058C230 /* OthersLikeYouView.swift in Sources */,
 				0BE9ECF72D4F1E4D00A051D1 /* LoginView.swift in Sources */,
 				0BE9ECCB2D4F1C0200A051D1 /* SereneStreamApp.swift in Sources */,
 				0BE9ECFE2D4F3A4200A051D1 /* GeneratePageView.swift in Sources */,
+				0B4DD71E2D4F76970058C230 /* AuthViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct HomeView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State private var selectedTab = 0
     
     var body: some View {
@@ -11,6 +12,7 @@ struct HomeView: View {
                         Label("Clips", systemImage: "house.fill")
                     }
                     .tag(0)
+                    .environmentObject(authViewModel)
                 
                 TracksView()
                     .tabItem {

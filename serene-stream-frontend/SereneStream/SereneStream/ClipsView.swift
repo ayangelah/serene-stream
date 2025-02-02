@@ -2,6 +2,9 @@ import SwiftUI
 import AVFoundation
 
 struct ClipsView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @StateObject private var generateTaskViewModel = GenerateTaskViewModel()
+    
     @State private var audioRecorder: AVAudioRecorder?
     @State private var audioPlayer: AVAudioPlayer?
     @State private var isRecording = false
@@ -14,96 +17,120 @@ struct ClipsView: View {
     private let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 
     var body: some View {
-        VStack {
-            // List of recorded audio files with checkboxes
-            List(recordedFiles, id: \.self, selection: $selectedFiles) { fileName in
-                HStack {
-                    // Checkbox for selecting the file
-                    Image(systemName: selectedFiles.contains(fileName) ? "checkmark.square" : "square")
-                        .onTapGesture {
-                            toggleSelection(fileName: fileName)
-                        }
-                    
-                    Text(fileName)
-                    Spacer()
-                    
-                    // Play button for each audio file
-                    Button("Play") {
-                        playAudio(fileName: fileName)
-                    }
-                    .padding(.leading, 8)
-                }
-            }
-
-            Spacer()
-
-            // Record Button
-            Button(action: {
-                if isRecording {
-                    stopRecording()
-                } else {
-                    startRecording()
-                }
-            }) {
-                Text(isRecording ? "Stop Recording" : "Start Recording")
-                    .frame(maxWidth: .infinity)
+        ZStack {
+            // Show ProgressView when the task is running
+            if generateTaskViewModel.isLoading {
+                ProgressView("Running Task...")
+                    .progressViewStyle(CircularProgressViewStyle())
                     .padding()
-                    .background(isRecording ? Color.red : Color.green)
-                    .foregroundColor(.white)
+                    .background(Color.black.opacity(0.5)) // Semi-transparent background
                     .cornerRadius(8)
+                    .foregroundColor(.white)
+                    .frame(width: 200, height: 200)
+                    .zIndex(1) // Ensure it appears on top of other UI
             }
-            .padding()
             
-            // Delete Button
-            if !selectedFiles.isEmpty {
+            
+            VStack {
+                // List of recorded audio files with checkboxes
+                List(recordedFiles, id: \.self, selection: $selectedFiles) { fileName in
+                    HStack {
+                        // Checkbox for selecting the file
+                        Image(systemName: selectedFiles.contains(fileName) ? "checkmark.square" : "square")
+                            .onTapGesture {
+                                toggleSelection(fileName: fileName)
+                            }
+                        
+                        Text(fileName)
+                        Spacer()
+                        
+                        // Play button for each audio file
+                        Button("Play") {
+                            playAudio(fileName: fileName)
+                        }
+                        .padding(.leading, 8)
+                    }
+                }
+
+                Spacer()
+
+                // Record Button
                 Button(action: {
-                    deleteSelectedFiles()
+                    if isRecording {
+                        stopRecording()
+                    } else {
+                        startRecording()
+                    }
                 }) {
-                    Text("Delete Selected")
+                    Text(isRecording ? "Stop Recording" : "Start Recording")
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.red)
+                        .background(isRecording ? Color.red : Color.green)
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
                 .padding()
-            }
-            
-            // Generate Button
-            Button(action: {
-                showGeneratePage.toggle()
-            }) {
-                Text("Generate")
-                    .frame(maxWidth: .infinity)
+                
+                // Delete Button
+                if !selectedFiles.isEmpty {
+                    Button(action: {
+                        deleteSelectedFiles()
+                    }) {
+                        Text("Delete Selected")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
                     .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
+                }
+                
+                // Generate Button
+                Button(action: {
+                    showGeneratePage.toggle()
+                }) {
+                    Text("Generate")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .padding()
+                .sheet(isPresented: $showGeneratePage) {
+                    GeneratePageView(
+                        selectedTab: $selectedTab, startGenerateTask: { title, prompt in
+                            generateTaskViewModel.generateSong(with: authViewModel.token!, title: title, prompt: prompt, filenames: selectedFiles
+                            )
+                        })
+                }
+
+                if let message = generateTaskViewModel.resultMessage {
+                    Text(message)
+                        .foregroundColor(.green)
+                        .padding()
+                }
+            }
+            .onAppear {
+                do {
+                    try AVAudioSession.sharedInstance().setCategory(.playAndRecord, options: .defaultToSpeaker)
+                    try AVAudioSession.sharedInstance().setActive(true)
+                } catch {
+                    print("Failed to set audio session category: \(error)")
+                }
+                loadSavedAudioFiles()
             }
             .padding()
-            .sheet(isPresented: $showGeneratePage) {
-                GeneratePageView(selectedTab: $selectedTab) // Pass binding to GeneratePageView
-            }
-
+            .navigationTitle("ClipsView")
         }
-        .onAppear {
-            do {
-                try AVAudioSession.sharedInstance().setCategory(.playAndRecord, options: .defaultToSpeaker)
-                try AVAudioSession.sharedInstance().setActive(true)
-            } catch {
-                print("Failed to set audio session category: \(error)")
-            }
-            loadSavedAudioFiles()
-        }
-        .padding()
-        .navigationTitle("ClipsView")
     }
 
     // Start recording audio
     private func startRecording() {
         let audioFilename = getAudioFileURL()
         let settings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM, // WAV uses PCM
+            AVFormatIDKey: kAudioFormatFLAC, // WAV uses PCM
             AVSampleRateKey: 44100.0, // Standard sample rate
             AVNumberOfChannelsKey: 1, // Mono
             AVLinearPCMBitDepthKey: 16, // 16-bit audio
@@ -144,7 +171,7 @@ struct ClipsView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd hh:mm:ss a" // Format for date and time
         let dateString = formatter.string(from: Date()) // Get the current date and time as a string
-        let fileName = "\(dateString).wav" // Combine the date string with the file extension
+        let fileName = "\(dateString).flac" // Combine the date string with the file extension
         
         return documentsDirectory.appendingPathComponent(fileName)
     }
@@ -153,7 +180,7 @@ struct ClipsView: View {
     private func loadSavedAudioFiles() {
         do {
             let files = try fileManager.contentsOfDirectory(at: documentsDirectory, includingPropertiesForKeys: nil)
-            recordedFiles = files.filter { $0.pathExtension == "wav" }
+            recordedFiles = files.filter { $0.pathExtension == "flac" }
                                   .map { $0.lastPathComponent }
         } catch {
             print("Error loading files: \(error.localizedDescription)")
