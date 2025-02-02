@@ -3,12 +3,14 @@ import Foundation
 class ConnectTaskViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var resultMessage: String?
-    @Published var similarTrackFiles: Set<URL>?
+    @Published var similarTrackFiles: [URL]?
+    @Published var similarTrackNames: [String]?
     
     func findConnect(with token: String, documentsDirectory: URL, inputTrackURL: URL) {
         isLoading = true
         resultMessage = nil
         similarTrackFiles = []
+        similarTrackNames = []
         
         DispatchQueue.global().async { [weak self] in
             Task {
@@ -39,15 +41,18 @@ class ConnectTaskViewModel: ObservableObject {
 
                     let (inputTrackUploadResponse, _) = try await URLSession.shared.data(for: inputTrackUploadRequest)
 
-                    var similarTrackIDs: Set<String> = []
+                    var similarTrackIDs: [String] = []
+                    var names: [String] = []
                     if let inputTrackUploadJson = try? JSONSerialization.jsonObject(with: inputTrackUploadResponse) {
                         let topTracks = (inputTrackUploadJson as! Dictionary<String, Any>)["top_3_clips"]
                         for trackItem in topTracks as! any Sequence {
-                            similarTrackIDs.insert((trackItem as! Dictionary<String, Any>)["track_id"] as! String)
+                            similarTrackIDs.append((trackItem as! Dictionary<String, Any>)["track_id"] as! String)
+                            
+                            names.append((trackItem as! Dictionary<String, Any>)["track_filename"] as! String)
                         }
                     }
                     
-                    var fileURLs: Set<URL> = []
+                    var fileURLs: [URL] = []
                     for similarTrackId in similarTrackIDs {
                         var similarTrackReq = URLRequest(url: URL(string: "https://serene-stream-api.vercel.app/track/\(similarTrackId)")!)
                         similarTrackReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -65,7 +70,7 @@ class ConnectTaskViewModel: ObservableObject {
                             // Write the file
                             try similarTrackData.write(to: fileURL)
                             
-                            fileURLs.insert(fileURL)
+                            fileURLs.append(fileURL)
                          }
                     }
                     
@@ -73,6 +78,7 @@ class ConnectTaskViewModel: ObservableObject {
                         self!.isLoading = false
                         self!.resultMessage = "Success"
                         self!.similarTrackFiles = fileURLs
+                        self!.similarTrackNames = names
                     }
                     
                 } catch {

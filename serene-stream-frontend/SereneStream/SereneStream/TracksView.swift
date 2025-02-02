@@ -2,13 +2,19 @@ import SwiftUI
 import UniformTypeIdentifiers
 import AVFoundation
 
+struct Track: Identifiable {
+    let id: UUID
+    let name: String
+    let fileURL: URL
+    let createdDate: Date
+}
+
 struct TracksView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var connectTaskViewModel = ConnectTaskViewModel()
     
     @State private var tracks: [Track] = []
     @State private var showOthersLikeYou: Bool = false
-    
     @State private var audioPlayer: AVAudioPlayer?
     @State private var audioPlayerManager: AudioPlayerManager?
     @State private var isPlaying: Bool = false
@@ -31,13 +37,31 @@ struct TracksView: View {
             }
             
             VStack {
+                Text("My Tracks")
+                    .font(.title)
+                    .bold()
+                    .foregroundColor(Color(hex: "#0c3b2e"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .padding(.top, -10)
+                
                 List {
                     ForEach(tracks) { track in
                         HStack {
-                            Text(track.name)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
+                            Image(systemName: "music.note")
+                                .foregroundColor(Color(hex: "bb8a52"))
+                                .font(.system(size: 24))
+                            
+                            VStack(alignment: .leading) {
+                                Text(track.name)
+                                    .font(.system(size: 16, weight: .medium))
+                                Text("Created: \(formattedDate(track.createdDate))")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.gray)
+                            }
+                            
                             Spacer()
+                            
                             Button(action: {
                                 handlePlayButton(for: track)
                             }) {
@@ -46,7 +70,7 @@ struct TracksView: View {
                                         .frame(width: 24, height: 24)
                                 } else {
                                     Image(systemName: "play.fill")
-                                        .foregroundColor(Color(hex: "#ffffff"))
+                                        .foregroundColor(Color(hex: "bb8a52"))
                                 }
                             }
                             .padding(.leading, 8)
@@ -67,12 +91,15 @@ struct TracksView: View {
                             .tint(.blue)
                         }
                     }
+                    .listRowBackground(Color.white)
                 }
+                .listStyle(PlainListStyle())
+                .background(Color.white)
                 Spacer()
             }
             .sheet(isPresented: Binding(get: {showOthersLikeYou && !connectTaskViewModel.isLoading}, set: { showOthersLikeYou = $0})
             ) {
-                OthersLikeYouView(similarTrackFiles: connectTaskViewModel.similarTrackFiles, playAudio: playAudio)
+                OthersLikeYouView(similarTrackFiles: connectTaskViewModel.similarTrackFiles, similarTrackNames: connectTaskViewModel.similarTrackNames, playAudio: playAudio)
                     .onDisappear {
                         audioPlayer?.stop()
                         isPlaying = false
@@ -89,6 +116,9 @@ struct TracksView: View {
                     }
             }
             .navigationTitle("Tracks")
+            .padding()
+            .navigationBarHidden(true)
+            .frame(maxHeight: .infinity, alignment: .top)
             .onAppear {
                 setupAudioSession()
                 loadSavedTracks()
@@ -101,7 +131,7 @@ struct TracksView: View {
         do {
             let files: [URL] = try fileManager.contentsOfDirectory(at: documentsDirectory, includingPropertiesForKeys: nil)
             tracks = files.filter { $0.pathExtension == "mp3" }
-                .map { Track(id: UUID(), name: $0.lastPathComponent, fileURL: $0) }
+                .map { Track(id: UUID(), name: $0.lastPathComponent, fileURL: $0, createdDate: Date()) }
         } catch {
             print("Error loading files: \(error.localizedDescription)")
         }
@@ -114,7 +144,6 @@ struct TracksView: View {
         } catch {
             print("Error deleting file \(track.name): \(error.localizedDescription)")
         }
-        
         loadSavedTracks()
     }
     
@@ -133,12 +162,12 @@ struct TracksView: View {
             if isPlaying {
                 audioPlayer?.stop()
                 isPlaying = false
-                currentlyPlayingFileURL = URL(filePath: "")
+                currentlyPlayingFileURL = nil
             }
             
             audioPlayerManager = AudioPlayerManager {
                 isPlaying = false
-                currentlyPlayingFileURL = URL(filePath: "")
+                currentlyPlayingFileURL = nil
             }
             
             audioPlayer = try AVAudioPlayer(contentsOf: audioFileURL)
@@ -159,10 +188,10 @@ struct TracksView: View {
             print("Failed to set audio session category: \(error)")
         }
     }
-}
-
-struct Track: Identifiable {
-    let id: UUID
-    let name: String
-    let fileURL: URL
+    
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd/yyyy"
+        return formatter.string(from: date)
+    }
 }

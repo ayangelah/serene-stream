@@ -46,10 +46,11 @@ struct ClipsView: View {
                 ProgressView("Generating Your Creation...")
                     .progressViewStyle(CircularProgressViewStyle())
                     .padding()
-                    .background(Color.black.opacity(0.5)) // Semi-transparent background
-                    .cornerRadius(8)
+                    .background(Color(hex: "bb8a52").opacity(1)) // Semi-transparent background
+                    .cornerRadius(15)
                     .foregroundColor(.white)
                     .frame(width: 200, height: 200)
+                    .shadow(radius: 20)
                     .zIndex(1) // Ensure it appears on top of other UI
             }
             
@@ -172,12 +173,6 @@ struct ClipsView: View {
                             .presentationDragIndicator(.visible)
                         }
                     }
-                }
-
-                if let message = generateTaskViewModel.resultMessage {
-                    Text(message)
-                        .foregroundColor(.green)
-                        .padding()
                 }
             }
             .onAppear {

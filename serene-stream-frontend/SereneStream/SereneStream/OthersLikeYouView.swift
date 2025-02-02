@@ -1,8 +1,9 @@
 import SwiftUI
 
 struct OthersLikeYouView: View {
-    var similarTrackFiles: Set<URL>?
-    var playAudio: (URL) -> Void?
+    var similarTrackFiles: [URL]?
+    var similarTrackNames: [String]?
+    var playAudio: (URL) -> Void
     
     var body: some View {
         VStack {
@@ -10,22 +11,22 @@ struct OthersLikeYouView: View {
                 .font(.largeTitle)
                 .padding()
             
-            if let urls = similarTrackFiles, !urls.isEmpty {
-                            List(urls.sorted(by: { $0.absoluteString < $1.absoluteString }), id: \.self) { url in
-                                Text(url.absoluteString)
-                                    .font(.body)
-                                    .foregroundColor(.blue)
-                                    .lineLimit(1)
-                                    .truncationMode(.middle)
-                                    .onTapGesture {
-                                        playAudio(url)
-                                    }
-                            }
-                        } else {
-                            Text("No similar tracks found.")
-                                .foregroundColor(.gray)
-                                .padding()
+            if let urls = similarTrackFiles, !urls.isEmpty, let names = similarTrackNames, names.count == urls.count {
+                List(urls.indices, id: \.self) { index in
+                    Text("\(names[index]). \(urls[index].absoluteString)")
+                        .font(.body)
+                        .foregroundColor(.blue)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .onTapGesture {
+                            playAudio(urls[index])
                         }
+                }
+            } else {
+                Text("No similar tracks found.")
+                    .foregroundColor(.gray)
+                    .padding()
+            }
 
             Spacer()
         }
