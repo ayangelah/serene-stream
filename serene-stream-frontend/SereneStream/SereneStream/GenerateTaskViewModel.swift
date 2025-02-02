@@ -64,18 +64,61 @@ class GenerateTaskViewModel: ObservableObject {
                     generateReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                     
                     let generateReqData = try JSONSerialization.data(withJSONObject: [
-                        "filenames": filenames,
+                        "filenames": Array(filenames),
                         "prompt": prompt,
                         "title": title
                         ], options: [])
                     
                     generateReq.httpBody = generateReqData
                     
+                    var generationKey: String = ""
                     let (generateReqResponse, _) = try await URLSession.shared.data(for: generateReq)
+                    if let generateReqResponseJson = try? JSONSerialization.jsonObject(with: generateReqResponse) {
+                        generationKey = (generateReqResponseJson as! Dictionary<String, Any>)["generation_key"] as! String
+                    }
+                    
+                    if generationKey.isEmpty {
+                        DispatchQueue.main.async {
+                            self!.isLoading = false
+                            self!.resultMessage = "Error: No generation key obtained!"
+                        }
+                        return
+                    }
+                    
+                    var generationComplete: Bool = false
+                    while !generationComplete {
+                        try? await Task.sleep(nanoseconds: 5 * 1_000_000_000)
+                        
+                        var generationStatusReq = URLRequest(url: URL(string: "https://serene-stream-api.vercel.app/generateStatus/\(generationKey)")!)
+                        generationStatusReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                        
+                        let (generationStatusData, _) = try await URLSession.shared.data(for: generationStatusReq)
+                        if let generationStatusJson = try? JSONSerialization.jsonObject(with: generationStatusData) {
+                            generationComplete = (generationStatusJson as! Dictionary<String, Any>)["ready"] as! Bool
+                        }
+                    }
+                    
+                    var generationResultReq = URLRequest(url: URL(string: "https://serene-stream-api.vercel.app/generateResult/\(generationKey)")!)
+                    generationResultReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    
+                    let (generationResultData, generationResultResponse) = try await URLSession.shared.data(for: generationResultReq)
+                    
+                    var fileURL: URL = documentsDirectory
+                    if let httpResponse = generationResultResponse as? HTTPURLResponse,
+                       let contentDisposition = httpResponse.allHeaderFields["Content-Disposition"] as? String,
+                       let filename = contentDisposition.components(separatedBy: "filename=").last?.trimmingCharacters(in: .whitespacesAndNewlines) {
+
+                        // Create the destination URL
+                        fileURL = documentsDirectory.appendingPathComponent(filename)
+                        
+                        // Write the file
+                        try generationResultData.write(to: fileURL)
+                     }
+                    
                     
                     DispatchQueue.main.async {
                         self!.isLoading = false
-                        self!.resultMessage = "\(generateReqResponse["generation_key"] as! String)"
+                        self!.resultMessage = "\(fileURL)"
                     }
                 } catch {
                     DispatchQueue.main.async {
