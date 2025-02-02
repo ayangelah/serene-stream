@@ -24,6 +24,7 @@ db = client.serene_stream_db
 users = db.users
 mongo_test = db.mongo_test
 clips = db.clips
+tracks = db.tracks
 generations = db.generations
 suno_files = db.suno_files
 
@@ -151,11 +152,11 @@ def upload_clip(current_user):
             'username': current_user['username'],
             'upload_date': datetime.utcnow(),
             'file_size': len(file_content),
-            'content_type': 'audio/mpeg'
+            'content_type': 'audio/flac'
         }
 
         # Insert into MongoDB
-        result = clips.insert_one(clip_document)
+        result = tracks.insert_one(clip_document)
 
         return jsonify({
             'message': 'File uploaded successfully',
@@ -238,6 +239,21 @@ def generation_result_combined_clips(current_user, generation_key):
         processor = AudioProcessor()
         combined_audio = processor.combine_audio_files(audio_files)
         combined_audio_mp3 = processor.wav_to_mp3(combined_audio)
+
+        # save to MongoDB
+        # Create audio file document
+        track_document = {
+            'user_id': current_user['_id'],
+            'title': generation['title'],
+            'content': Binary(combined_audio_mp3),  # Store file as binary data
+        }
+
+        try:
+            # Insert into MongoDB
+            result = tracks.insert_one(track_document)
+            print(f"Track inserted with ID: {result.inserted_id}")
+        except Exception as e:
+            print(f"Error inserting track: {str(e)}")
 
         # Return the processed audio file
         return send_file(
