@@ -9,11 +9,11 @@ import jwt
 from functools import wraps
 from datetime import datetime, timedelta
 from bson import Binary, ObjectId
-from AudioProcessor import AudioProcessor
+from .AudioProcessor import AudioProcessor
 from http.cookies import SimpleCookie
 import random
 import string
-from Audio2Vec import evaluator
+from .Audio2Vec import evaluator
 
 load_dotenv()
 db_conn = os.getenv('DB_CONN')
