@@ -8,12 +8,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from functools import wraps
 from datetime import datetime, timedelta
-from bson import Binary
-from .AudioProcessor import AudioProcessor
+from bson import Binary, ObjectId
+from AudioProcessor import AudioProcessor
 from http.cookies import SimpleCookie
 import random
 import string
-from .Audio2Vec import evaluator
+from Audio2Vec import evaluator
 
 load_dotenv()
 db_conn = os.getenv('DB_CONN')
@@ -417,7 +417,6 @@ def connect(current_user):
             'track_id': str(track['_id']),
             'score': score,
             'track_filename': track['title'],
-            'content': track['content']
         })
 
     # Sort by score in ascending order (lowest score first)
@@ -429,3 +428,22 @@ def connect(current_user):
     return jsonify({
         'top_3_clips': top_3_clips
     })
+
+
+@app.route('/track/<track_id>', methods=['GET'])
+@token_required
+def get_track(current_user, track_id):
+    track = tracks.find_one({'_id': ObjectId(track_id)})
+
+    if not track:
+        return jsonify({'message': 'Track not found'}), 404
+
+    track_bytes = track['content']  # Assuming 'content' stores raw audio bytes
+    track_title = track.get('title', 'track')
+
+    return send_file(
+        io.BytesIO(track_bytes),
+        mimetype='audio/mpeg',
+        as_attachment=True,
+        download_name=f"{track_title}.mp3"
+    )
