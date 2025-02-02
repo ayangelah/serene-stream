@@ -76,7 +76,20 @@ def login():
 
     user = users.find_one({'username': data['username']})
 
-    if not user or not check_password_hash(user['password'], data['password']):
+    if not user:
+        # Create a new user
+        # Generate password hash with salt
+        hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
+
+        # Create new user
+        new_user = {
+            'username': data['username'],
+            'password': hashed_password,
+            'created_at': datetime.utcnow()
+        }
+
+        users.insert_one(new_user)
+    elif not check_password_hash(user['password'], data['password']):
         return jsonify({'message': 'Invalid username or password'}), 401
 
     # Generate JWT token
