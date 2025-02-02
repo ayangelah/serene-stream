@@ -416,7 +416,8 @@ def connect(current_user):
         evaluation_scores.append({
             'track_id': str(track['_id']),
             'score': score,
-            'track_filename': track['title']
+            'track_filename': track['title'],
+            'content': track['content']
         })
 
     # Sort by score in ascending order (lowest score first)
