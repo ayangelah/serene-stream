@@ -18,6 +18,7 @@
 		0BE9ECF72D4F1E4D00A051D1 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE9ECF62D4F1E4D00A051D1 /* LoginView.swift */; };
 		0BE9ECF92D4F24A300A051D1 /* ClipsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE9ECF82D4F24A300A051D1 /* ClipsView.swift */; };
 		0BE9ECFB2D4F24D900A051D1 /* TracksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE9ECFA2D4F24D900A051D1 /* TracksView.swift */; };
+		0BE9ECFE2D4F3A4200A051D1 /* GeneratePageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE9ECFD2D4F3A4200A051D1 /* GeneratePageView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +53,8 @@
 		0BE9ECF62D4F1E4D00A051D1 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		0BE9ECF82D4F24A300A051D1 /* ClipsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipsView.swift; sourceTree = "<group>"; };
 		0BE9ECFA2D4F24D900A051D1 /* TracksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TracksView.swift; sourceTree = "<group>"; };
+		0BE9ECFC2D4F384000A051D1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		0BE9ECFD2D4F3A4200A051D1 /* GeneratePageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratePageView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +105,7 @@
 		0BE9ECC92D4F1C0200A051D1 /* SereneStream */ = {
 			isa = PBXGroup;
 			children = (
+				0BE9ECFC2D4F384000A051D1 /* Info.plist */,
 				0BE9ECCA2D4F1C0200A051D1 /* SereneStreamApp.swift */,
 				0BE9ECCC2D4F1C0200A051D1 /* ContentView.swift */,
 				0BE9ECF42D4F1D7D00A051D1 /* HomeView.swift */,
@@ -110,6 +114,7 @@
 				0BE9ECF62D4F1E4D00A051D1 /* LoginView.swift */,
 				0BE9ECF82D4F24A300A051D1 /* ClipsView.swift */,
 				0BE9ECFA2D4F24D900A051D1 /* TracksView.swift */,
+				0BE9ECFD2D4F3A4200A051D1 /* GeneratePageView.swift */,
 			);
 			path = SereneStream;
 			sourceTree = "<group>";
@@ -275,6 +280,7 @@
 				0BE9ECF92D4F24A300A051D1 /* ClipsView.swift in Sources */,
 				0BE9ECF72D4F1E4D00A051D1 /* LoginView.swift in Sources */,
 				0BE9ECCB2D4F1C0200A051D1 /* SereneStreamApp.swift in Sources */,
+				0BE9ECFE2D4F3A4200A051D1 /* GeneratePageView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -435,6 +441,8 @@
 				DEVELOPMENT_ASSET_PATHS = "\"SereneStream/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SereneStream/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Serene Stream Needs Access to Your Microphone";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -463,6 +471,8 @@
 				DEVELOPMENT_ASSET_PATHS = "\"SereneStream/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SereneStream/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Serene Stream Needs Access to Your Microphone";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
