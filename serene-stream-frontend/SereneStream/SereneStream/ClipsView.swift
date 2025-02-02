@@ -103,10 +103,12 @@ struct ClipsView: View {
     private func startRecording() {
         let audioFilename = getAudioFileURL()
         let settings: [String: Any] = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 12000,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            AVFormatIDKey: kAudioFormatLinearPCM, // WAV uses PCM
+            AVSampleRateKey: 44100.0, // Standard sample rate
+            AVNumberOfChannelsKey: 1, // Mono
+            AVLinearPCMBitDepthKey: 16, // 16-bit audio
+            AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsFloatKey: false
         ]
         
         do {
@@ -142,7 +144,7 @@ struct ClipsView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd hh:mm:ss a" // Format for date and time
         let dateString = formatter.string(from: Date()) // Get the current date and time as a string
-        let fileName = "\(dateString).m4a" // Combine the date string with the file extension
+        let fileName = "\(dateString).wav" // Combine the date string with the file extension
         
         return documentsDirectory.appendingPathComponent(fileName)
     }
@@ -151,7 +153,7 @@ struct ClipsView: View {
     private func loadSavedAudioFiles() {
         do {
             let files = try fileManager.contentsOfDirectory(at: documentsDirectory, includingPropertiesForKeys: nil)
-            recordedFiles = files.filter { $0.pathExtension == "m4a" }
+            recordedFiles = files.filter { $0.pathExtension == "wav" }
                                   .map { $0.lastPathComponent }
         } catch {
             print("Error loading files: \(error.localizedDescription)")
