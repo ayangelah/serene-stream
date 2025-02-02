@@ -1,20 +1,40 @@
 import SwiftUI
 import AVFoundation
 
+// Create a class to handle the audio player delegate
+class AudioPlayerManager: NSObject, AVAudioPlayerDelegate {
+    var onPlaybackFinished: () -> Void
+    
+    init(onPlaybackFinished: @escaping () -> Void) {
+        self.onPlaybackFinished = onPlaybackFinished
+        super.init()
+    }
+    
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        DispatchQueue.main.async {
+            self.onPlaybackFinished()
+        }
+    }
+}
+
 struct ClipsView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var generateTaskViewModel = GenerateTaskViewModel()
     
     @State private var audioRecorder: AVAudioRecorder?
     @State private var audioPlayer: AVAudioPlayer?
+    @State private var audioPlayerManager: AudioPlayerManager?
     @State private var isRecording = false
     @State private var recordedFiles: [String] = []
-    @State private var selectedFiles: Set<String> = [] // Track selected files for deletion/generation
+    @State private var selectedFiles: Set<String> = []
     @State private var showGeneratePage = false
-    @Binding var selectedTab: Int // Track the current tab
+    @Binding var selectedTab: Int
 
     @State private var recordingTime: TimeInterval = 0
     @State private var timer: Timer?
+
+    @State private var isPlaying = false
+    @State private var currentlyPlayingFile: String?
 
     private let fileManager = FileManager.default
     private let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -46,7 +66,6 @@ struct ClipsView: View {
                 // List of recorded audio files with checkboxes
                 List(recordedFiles, id: \.self, selection: $selectedFiles) { fileName in
                     HStack {
-                        // Checkbox for selecting the file
                         Image(systemName: selectedFiles.contains(fileName) ? "checkmark.square.fill" : "square")
                             .foregroundColor(.white)
                             .onTapGesture {
@@ -58,20 +77,32 @@ struct ClipsView: View {
                         
                         Spacer()
                         
-                        // Play button for each audio file
                         Button(action: {
-                            playAudio(fileName: fileName)
+                            if isPlaying && currentlyPlayingFile == fileName {
+                                // If this file is currently playing, stop it
+                                audioPlayer?.stop()
+                                isPlaying = false
+                                currentlyPlayingFile = nil
+                            } else {
+                                // If this file is not playing, play it
+                                playAudio(fileName: fileName)
+                            }
                         }) {
-                            Image(systemName: "play.fill")
-                                .foregroundColor(selectedFiles.contains(fileName) ? Color(hex: "#0c3b2e") : Color(hex: "#ffffff"))
+                            if isPlaying && currentlyPlayingFile == fileName {
+                                SoundWaveView()
+                                    .frame(width: 24, height: 24)
+                            } else {
+                                Image(systemName: "play.fill")
+                                    .foregroundColor(selectedFiles.contains(fileName) ? Color(hex: "#0c3b2e") : Color(hex: "#ffffff"))
+                            }
                         }
                         .padding(.leading, 8)
                     }
                     .padding()
-                    .background(selectedFiles.contains(fileName) ? Color(hex: "6d9773") : Color(hex: "#0c3b2e")) // Change background when selected
-                    .foregroundColor(selectedFiles.contains(fileName) ? Color(hex: "#0c3b2e") : Color(hex: "#ffffff")) // Change foreground when selected
+                    .background(selectedFiles.contains(fileName) ? Color(hex: "6d9773") : Color(hex: "#0c3b2e"))
+                    .foregroundColor(selectedFiles.contains(fileName) ? Color(hex: "#0c3b2e") : Color(hex: "#ffffff"))
                     .cornerRadius(8)
-                    .listRowBackground(Color.white) // Set list row background to white
+                    .listRowBackground(Color.white)
                 }
                 .listStyle(PlainListStyle()) // Remove default list styling
 
@@ -130,7 +161,6 @@ struct ClipsView: View {
                                 .resizable()
                                 .frame(width: 98, height: 98) // Adjust size as needed
                                 .foregroundColor(.white)
-//                                .padding()
                         }
                         .padding()
                         .sheet(isPresented: $showGeneratePage) {
@@ -219,8 +249,24 @@ struct ClipsView: View {
         let audioFileURL = documentsDirectory.appendingPathComponent(fileName)
         
         do {
+            // Stop any currently playing audio
+            if isPlaying {
+                audioPlayer?.stop()
+                isPlaying = false
+                currentlyPlayingFile = nil
+            }
+            
+            // Create a new audio player manager
+            audioPlayerManager = AudioPlayerManager {
+                isPlaying = false
+                currentlyPlayingFile = nil
+            }
+            
             audioPlayer = try AVAudioPlayer(contentsOf: audioFileURL)
+            audioPlayer?.delegate = audioPlayerManager
             audioPlayer?.play()
+            isPlaying = true
+            currentlyPlayingFile = fileName
         } catch {
             print("Error playing audio: \(error.localizedDescription)")
         }
@@ -280,6 +326,7 @@ struct SoundWaveView: View {
         HStack(spacing: 4) {
             ForEach(0..<5) { index in
                 RoundedRectangle(cornerRadius: 3)
+                    .foregroundColor(Color(hex: "#ffba00"))
                     .frame(width: 4, height: animate ? CGFloat.random(in: 10...30) : 10)
                     .animation(Animation.easeInOut(duration: 0.5).repeatForever().delay(Double(index) * 0.1), value: animate)
                     .onAppear {
