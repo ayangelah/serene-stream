@@ -152,7 +152,7 @@ def upload_clip(current_user):
             'username': current_user['username'],
             'upload_date': datetime.utcnow(),
             'file_size': len(file_content),
-            'content_type': 'audio/mpeg'
+            'content_type': 'audio/flac'
         }
 
         # Insert into MongoDB
