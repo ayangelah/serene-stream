@@ -1,31 +1,3 @@
-//import SwiftUI
-//
-//struct HomeView: View {
-//    @EnvironmentObject var authViewModel: AuthViewModel
-//    @State private var selectedTab = 0
-//
-//    var body: some View {
-//        NavigationView {
-//            TabView(selection: $selectedTab) {
-//                ClipsView(selectedTab: $selectedTab)
-//                    .tabItem {
-//                        Label("Clips", systemImage: "house.fill")
-//                    }
-//                    .tag(0)
-//                    .environmentObject(authViewModel)
-//
-//                TracksView()
-//                    .tabItem {
-//                        Label("Tracks", systemImage: "gearshape.fill")
-//                    }
-//                    .tag(1)
-//            }
-//        }
-//        .navigationBarBackButtonHidden(true)
-//    }
-//}
-
-
 import SwiftUI
 
 struct HomeView: View {
@@ -43,20 +15,26 @@ struct HomeView: View {
                         .frame(width: 40, height: 40) // Adjust the size of the logo
                         .padding(.top)
                     
+                    
                     // TabView below the logo
                     TabView(selection: $selectedTab) {
                         ClipsView(selectedTab: $selectedTab)
                             .tabItem {
-                                Label("Clips", systemImage: "house.fill")
+                                Label("Clips", systemImage: "mic.fill")
                             }
                             .tag(0)
                             .environmentObject(authViewModel)
                         
                         TracksView()
                             .tabItem {
-                                Label("Tracks", systemImage: "gearshape.fill")
+                                Label("Tracks", systemImage: "music.note.list")
                             }
                             .tag(1)
+                    }
+                    .onAppear {
+                        // Set the background color of the tab bar
+                        UITabBar.appearance().backgroundColor = UIColor(red: 0.05, green: 0.23, blue: 0.18, alpha: 1.00) // #0c3b2e
+                        UITabBar.appearance().unselectedItemTintColor = UIColor.white
                     }
                 }
             }

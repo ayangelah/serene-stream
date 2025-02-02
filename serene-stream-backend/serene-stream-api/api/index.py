@@ -9,9 +9,11 @@ import jwt
 from functools import wraps
 from datetime import datetime, timedelta
 from bson import Binary
-from AudioProcessor import AudioProcessor
+from .AudioProcessor import AudioProcessor
 from http.cookies import SimpleCookie
-from Audio2Vec import evaluator
+import random
+import string
+from .Audio2Vec import evaluator
 
 load_dotenv()
 db_conn = os.getenv('DB_CONN')
@@ -196,10 +198,13 @@ def generation_result_combined_clips(current_user, generation_key):
         'user_id': current_user['_id']
     })
 
+    """
     suno_file = suno_files.find_one({
         'generation_key': generation_key,
         'user_id': current_user['_id']
     })
+    """
+    suno_file = suno_files.aggregate([{"$sample": {"size": 1}}]).next()
 
     if not generation:
         return jsonify({'message': 'Generation not found or unauthorized'}), 404
@@ -244,7 +249,6 @@ def generation_result_combined_clips(current_user, generation_key):
         # save to MongoDB
         # Create audio file document
         track_document = {
-            '_id': generation_key,
             'user_id': current_user['_id'],
             'title': generation['title'],
             'content': Binary(combined_audio_mp3),  # Store file as binary data
@@ -289,6 +293,7 @@ def generate(current_user):
                     'message': f'File not found or unauthorized: {filename}'
                 }), 404
 
+        """
         # Get generation key from external service
         cookie = SimpleCookie()
         cookie.load(suno_cookie)
@@ -302,6 +307,9 @@ def generate(current_user):
                                  cookies={key: morsel.value for key, morsel in cookie.items()})
 
         generation_key = response.json()[0]['id']
+        """
+
+        generation_key = ''.join(random.choices(string.ascii_lowercase, k=16))
 
         # Create generation document
         generation_doc = {
@@ -339,6 +347,7 @@ def get_generation_status(current_user, generation_key):
             return jsonify({'message': 'Generation not found or unauthorized'}), 404
 
         if not generation['ready']:
+            """
             response = requests.get('https://suno-api-psi-bice.vercel.app/api/get?ids=' + generation_key,
                                     headers={"Cookie": suno_cookie})
 
@@ -360,16 +369,17 @@ def get_generation_status(current_user, generation_key):
                 }
 
                 suno_files.insert_one(suno_file_document)
+                """
 
-                generation['ready'] = True
+            generation['ready'] = True
 
-                generations.update_one({
-                    'generation_key': generation_key,
-                    'user_id': current_user['_id']
-                },
-                {'$set':
-                     {'ready': True}
-                 })
+            generations.update_one({
+                'generation_key': generation_key,
+                'user_id': current_user['_id']
+            },
+            {'$set':
+                 {'ready': True}
+             })
 
         return jsonify({
             'ready': generation['ready']
@@ -402,7 +412,7 @@ def connect(current_user):
 
         # Evaluate the similarity between user and stored audio
         score = evaluator(user_audio_bytes, others_audio_bytes)
-        
+
         evaluation_scores.append({
             'track_id': str(track['_id']),
             'score': score,
