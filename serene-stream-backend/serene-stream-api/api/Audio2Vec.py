@@ -1,10 +1,8 @@
 import numpy as np
 import io
 import torchaudio
-from speechbrain.pretrained import EncoderClassifier
-
-# Load the pre-trained model for speaker embeddings from SpeechBrain
-classifier = EncoderClassifier.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb")
+import vosk
+import wave
 
 # Normalization function for the embedding
 def normalize(v):
@@ -18,22 +16,19 @@ def decode_mp3(mp3_bytes):
     waveform, sample_rate = torchaudio.load(audio_data, format="mp3")  # Use torchaudio to load the mp3 data
     return waveform, sample_rate
 
-# Function to get an embedding of an audio file using SpeechBrain
-def get_embedding(audio_file):  # Takes in mp3 file bytes
-    try:
-        # Decode the MP3 bytes into waveform and sample rate
-        waveform, sample_rate = decode_mp3(audio_file)
-        
-        # Get the speaker embeddings from the classifier model
-        embeddings = classifier.encode_batch(waveform)
-        flattened_embedding = embeddings.reshape(1, -1)
-        
-        # Normalize the embedding vector
-        normalized_v = normalize(flattened_embedding.squeeze().numpy())
-        return normalized_v
-    except Exception as e:
-        print(f"Error processing audio file: {audio_file}. Error: {e}")
-        return None
+
+def get_embedding(audio_file):
+    model = vosk.Model("../vosk-model-small-en-us-0.15")
+    wf = wave.open(audio_file, "rb")
+    rec = vosk.KaldiRecognizer(model, wf.getframerate())
+    while True:
+        data = wf.readframes(4000)
+        if len(data) == 0:
+            break
+        if rec.AcceptWaveform(data):
+            result = rec.Result()
+            print(result)
+
 
 # Function to calculate the dot product similarity between two embeddings
 def evaluator(audio_1, audio_2):
