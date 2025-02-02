@@ -9,7 +9,7 @@ import jwt
 from functools import wraps
 from datetime import datetime, timedelta
 from bson import Binary
-from .AudioProcessor import AudioProcessor
+from AudioProcessor import AudioProcessor
 from http.cookies import SimpleCookie
 
 load_dotenv()
@@ -156,7 +156,7 @@ def upload_clip(current_user):
         }
 
         # Insert into MongoDB
-        result = tracks.insert_one(clip_document)
+        result = clips.insert_one(clip_document)
 
         return jsonify({
             'message': 'File uploaded successfully',
