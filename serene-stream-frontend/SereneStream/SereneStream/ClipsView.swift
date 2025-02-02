@@ -101,7 +101,7 @@ struct ClipsView: View {
                 .sheet(isPresented: $showGeneratePage) {
                     GeneratePageView(
                         selectedTab: $selectedTab, startGenerateTask: { title, prompt in
-                            generateTaskViewModel.generateSong(with: authViewModel.token!, title: title, prompt: prompt, filenames: selectedFiles
+                            generateTaskViewModel.generateSong(with: authViewModel.token!, documentsDirectory: documentsDirectory, title: title, prompt: prompt, filenames: selectedFiles
                             )
                         })
                 }
