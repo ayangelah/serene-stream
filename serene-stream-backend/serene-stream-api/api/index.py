@@ -13,7 +13,7 @@ from .AudioProcessor import AudioProcessor
 from http.cookies import SimpleCookie
 import random
 import string
-from Audio2Vec import evaluator
+from .Audio2Vec import evaluator
 
 load_dotenv()
 db_conn = os.getenv('DB_CONN')

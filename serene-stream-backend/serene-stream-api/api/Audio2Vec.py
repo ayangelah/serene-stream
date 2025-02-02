@@ -1,7 +1,7 @@
 import numpy as np
 import io
-import torchaudio
 from speechbrain.pretrained import EncoderClassifier
+import soundfile as sf
 
 # Load the pre-trained model for speaker embeddings from SpeechBrain
 classifier = EncoderClassifier.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb")
@@ -14,9 +14,10 @@ def normalize(v):
 # Function to decode MP3 bytes to waveform and sample rate using torchaudio
 def decode_mp3(mp3_bytes):
     """Decode MP3 audio bytes to waveform and sample rate using torchaudio."""
-    audio_data = io.BytesIO(mp3_bytes)  # Convert bytes into file-like object
-    waveform, sample_rate = torchaudio.load(audio_data, format="mp3")  # Use torchaudio to load the mp3 data
-    return waveform, sample_rate
+    mp3_buff = io.BytesIO(mp3_bytes)
+    mp3_buff.name = 'file.mp3'
+    data, samplerate = sf.read(mp3_buff)
+    return data, samplerate
 
 # Function to get an embedding of an audio file using SpeechBrain
 def get_embedding(audio_file):  # Takes in mp3 file bytes
