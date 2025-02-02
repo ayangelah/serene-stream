@@ -9,8 +9,9 @@ import jwt
 from functools import wraps
 from datetime import datetime, timedelta
 from bson import Binary
-from .AudioProcessor import AudioProcessor
+from AudioProcessor import AudioProcessor
 from http.cookies import SimpleCookie
+from Audio2Vec import evaluator
 
 load_dotenv()
 db_conn = os.getenv('DB_CONN')
@@ -156,7 +157,7 @@ def upload_clip(current_user):
         }
 
         # Insert into MongoDB
-        result = tracks.insert_one(clip_document)
+        result = clips.insert_one(clip_document)
 
         return jsonify({
             'message': 'File uploaded successfully',
@@ -243,6 +244,7 @@ def generation_result_combined_clips(current_user, generation_key):
         # save to MongoDB
         # Create audio file document
         track_document = {
+            '_id': generation_key,
             'user_id': current_user['_id'],
             'title': generation['title'],
             'content': Binary(combined_audio_mp3),  # Store file as binary data
@@ -375,3 +377,44 @@ def get_generation_status(current_user, generation_key):
 
     except Exception as e:
         return jsonify({'message': f'Error fetching generation status: {str(e)}'}), 500
+
+@app.route('/connect', methods=['POST'])
+@token_required
+def connect(current_user):
+    if 'file' not in request.files:
+        return jsonify({'message': 'No file part'}), 400
+
+    user_audio = request.files['file']
+
+    if not user_audio.filename.lower().endswith('.mp3'):
+        return jsonify({'message': 'Invalid audio format. Please upload an MP3 file.'}), 400
+
+    user_audio_bytes = user_audio.read()  # Read MP3 file as bytes
+
+    all_tracks = tracks.find({})
+    evaluation_scores = []
+
+    if not all_tracks:
+        return jsonify({'message': 'No tracks found in the database'}), 404
+
+    for track in all_tracks:
+        others_audio_bytes = track['content']
+
+        # Evaluate the similarity between user and stored audio
+        score = evaluator(user_audio_bytes, others_audio_bytes)
+        
+        evaluation_scores.append({
+            'track_id': str(track['_id']),
+            'score': score,
+            'track_filename': track['title']
+        })
+
+    # Sort by score in ascending order (lowest score first)
+    evaluation_scores.sort(key=lambda x: x['score'])
+
+    # Get the top 3 clips with the lowest score
+    top_3_clips = evaluation_scores[:3]
+
+    return jsonify({
+        'top_3_clips': top_3_clips
+    })
