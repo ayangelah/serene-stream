@@ -58,9 +58,24 @@ class GenerateTaskViewModel: ObservableObject {
                         print(clipUploadResponse)
                     }
                     
+                    var generateReq = URLRequest(url: URL(string: "https://serene-stream-api.vercel.app/generate")!)
+                    generateReq.httpMethod = "POST"
+                    generateReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    generateReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    
+                    let generateReqData = try JSONSerialization.data(withJSONObject: [
+                        "filenames": filenames,
+                        "prompt": prompt,
+                        "title": title
+                        ], options: [])
+                    
+                    generateReq.httpBody = generateReqData
+                    
+                    let (generateReqResponse, _) = try await URLSession.shared.data(for: generateReq)
+                    
                     DispatchQueue.main.async {
                         self!.isLoading = false
-                        self!.resultMessage = "\(filenamesToUpload)"
+                        self!.resultMessage = "\(generateReqResponse["generation_key"] as! String)"
                     }
                 } catch {
                     DispatchQueue.main.async {
