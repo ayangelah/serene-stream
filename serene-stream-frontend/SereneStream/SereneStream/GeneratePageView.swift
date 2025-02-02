@@ -4,41 +4,65 @@ struct GeneratePageView: View {
     @State private var title: String = ""
     @State private var prompt: String = ""
     @Environment(\.presentationMode) var presentationMode
-    @Binding var selectedTab: Int // Track the current tab
+    @Binding var selectedTab: Int
     
     var startGenerateTask: (String, String) -> Void
 
     var body: some View {
-        VStack {
+        VStack(alignment: .leading, spacing: 20) {
+            Spacer().frame(height:10)
+            
+            // Heading
+            Text("Generate a Song")
+                .font(.title)
+                .bold()
+                .foregroundColor(Color(hex: "#0c3b2e"))
+            
             // Title Field
-            TextField("Title", text: $title)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Title")
+                    .foregroundColor(Color(hex: "#bb8a52"))
+                    .font(.headline)
+                
+                TextField("My First Song", text: $title)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .padding()
+                    .background(Color(hex: "#f8faf9"))
+                    .foregroundColor(Color(hex: "#9ba19f"))
+                    .cornerRadius(20)
+            }
 
             // Prompt Field
-            TextField("Prompt", text: $prompt)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Prompt")
+                    .foregroundColor(Color(hex: "#bb8a52"))
+                    .font(.headline)
+                
+                TextField("Jazz Chill", text: $prompt)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .padding()
+                    .background(Color(hex: "#f8faf9"))
+                    .foregroundColor(Color(hex: "#9ba19f"))
+                    .cornerRadius(20)
+            }
 
-            Spacer()
+            Spacer().frame(height:25)
 
-            // Enter Button
+            // Generate Button
             Button(action: {
-                // Navigate to Page B in TabView
                 presentationMode.wrappedValue.dismiss()
-                //selectedTab = 1
                 startGenerateTask(title, prompt)
             }) {
-                Text("Enter")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
+                Text("Generate Track")
+                    .fontWeight(.medium)
                     .foregroundColor(.white)
-                    .cornerRadius(8)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 15)
+                    .background(Color(hex: "#6d9773"))
+                    .cornerRadius(25)
             }
-            .padding()
         }
         .padding()
-        .navigationTitle("Generate Prompt")
+        .navigationBarHidden(true)
     }
 }
