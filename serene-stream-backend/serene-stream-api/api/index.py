@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from functools import wraps
 from datetime import datetime, timedelta
+from bson import Binary
 
 load_dotenv()
 db_conn = os.getenv('DB_CONN')
@@ -17,6 +18,7 @@ client = MongoClient(db_conn)
 db = client.serene_stream_db
 users = db.users
 mongo_test = db.mongo_test
+clips = db.clips
 
 
 def token_required(f):
@@ -114,3 +116,64 @@ def home(current_user):
 @app.route('/about')
 def about():
     return 'About'
+
+
+@app.route('/clips', methods=['POST'])
+@token_required
+def upload_clip(current_user):
+    if 'file' not in request.files:
+        return jsonify({'message': 'No file part'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'message': 'No selected file'}), 400
+
+    if not file.filename.lower().endswith('.m4a'):
+        return jsonify({'message': 'Only M4A files are allowed'}), 400
+
+    try:
+        # Read the file content
+        file_content = file.read()
+
+        # Create audio file document
+        clip_document = {
+            'filename': file.filename,
+            'content': Binary(file_content),  # Store file as binary data
+            'user_id': current_user['_id'],
+            'username': current_user['username'],
+            'upload_date': datetime.utcnow(),
+            'file_size': len(file_content),
+            'content_type': 'audio/mpeg'
+        }
+
+        # Insert into MongoDB
+        result = clips.insert_one(clip_document)
+
+        return jsonify({
+            'message': 'File uploaded successfully',
+            'file_id': str(result.inserted_id),
+            'filename': file.filename
+        }), 201
+
+    except Exception as e:
+        return jsonify({'message': f'Error uploading file: {str(e)}'}), 500
+
+
+@app.route('/clips', methods=['GET'])
+@token_required
+def get_user_clips(current_user):
+    # Get all files uploaded by the current user
+    user_files = clips.find(
+        {'user_id': current_user['_id']},
+        {'content': 0}  # Exclude the file content from the results
+    )
+
+    files_list = [{
+        'file_id': str(file['_id']),
+        'filename': file['filename'],
+        'upload_date': file['upload_date'].isoformat(),
+        'file_size': file['file_size']
+    } for file in user_files]
+
+    return jsonify(files_list)
