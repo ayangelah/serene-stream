@@ -153,11 +153,11 @@ def upload_clip(current_user):
             'username': current_user['username'],
             'upload_date': datetime.utcnow(),
             'file_size': len(file_content),
-            'content_type': 'audio/mpeg'
+            'content_type': 'audio/flac'
         }
 
         # Insert into MongoDB
-        result = tracks.insert_one(clip_document)
+        result = clips.insert_one(clip_document)
 
         return jsonify({
             'message': 'File uploaded successfully',
